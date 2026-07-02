@@ -26,6 +26,8 @@ proyecto-innovatech/
 ├── .github/workflows/
 │   └── deploy.yml           → Pipeline CI/CD (build + push a ECR + deploy a EKS)
 └── docker-compose.yml       → Para prueba local
+```
+
 # 🚀 Probar Localmente
 bashdocker-compose up --build
 
