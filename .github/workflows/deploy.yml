@@ -7,7 +7,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  EKS_CLUSTER: innovatech-eks
+  EKS_CLUSTER: innovatech
 
 jobs:
   build-and-deploy:
