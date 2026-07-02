@@ -75,7 +75,8 @@
 </div>
 
 <script>
-  const BACKEND_URL = window.BACKEND_URL || 'http://localhost:3000';
+  // URL relativa: nginx la redirige al backend vía /api/ (ver nginx.conf)
+  const BACKEND_URL = window.BACKEND_URL || '';
 
   let allProducts = [];
   let filtroActivo = 'todos';

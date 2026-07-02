@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: innovatech-frontend
+  labels:
+    app: innovatech-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: innovatech-frontend
+  template:
+    metadata:
+      labels:
+        app: innovatech-frontend
+    spec:
+      containers:
+        - name: innovatech-frontend
+          # Reemplaza <ACCOUNT_ID> antes del primer "kubectl apply".
+          image: <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/innovatech-frontend:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 15
