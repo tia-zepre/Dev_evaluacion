@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InnovatechChile</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f4f4f4; color: #222; }
+    .navbar { background: #fff; border-bottom: 1px solid #ddd; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-size: 20px; font-weight: bold; } .logo span { color: #185FA5; }
+    .nav-links { display: flex; gap: 20px; font-size: 14px; color: #555; }
+    .hero { background: #185FA5; color: #fff; padding: 40px 24px; text-align: center; }
+    .hero h1 { font-size: 28px; margin-bottom: 8px; }
+    .hero p { font-size: 15px; opacity: 0.85; }
+    .search-bar { display: flex; gap: 8px; max-width: 420px; margin: 20px auto 0; }
+    .search-bar input { flex: 1; padding: 10px 14px; border: none; border-radius: 6px; font-size: 14px; }
+    .search-bar button { padding: 10px 18px; background: #fff; color: #185FA5; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    .filters { padding: 14px 24px; display: flex; gap: 8px; background: #fff; border-bottom: 1px solid #ddd; flex-wrap: wrap; }
+    .pill { padding: 6px 14px; border: 1px solid #ddd; border-radius: 20px; font-size: 13px; cursor: pointer; background: #fff; color: #555; }
+    .pill.active { border-color: #185FA5; color: #185FA5; background: #e8f0fb; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; padding: 24px; }
+    .card { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 16px; }
+    .card:hover { border-color: #185FA5; }
+    .card-img { width: 100%; height: 90px; background: #f0f4ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 36px; margin-bottom: 12px; }
+    .card-cat { font-size: 11px; color: #888; margin-bottom: 4px; }
+    .card-name { font-size: 13px; font-weight: bold; margin-bottom: 6px; line-height: 1.3; }
+    .card-price { font-size: 16px; font-weight: bold; color: #185FA5; margin-bottom: 10px; }
+    .badge { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10px; margin-bottom: 6px; font-weight: bold; }
+    .badge-new { background: #e8f0fb; color: #0C447C; }
+    .badge-sale { background: #fde8e8; color: #A32D2D; }
+    .card-btn { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #222; font-size: 13px; cursor: pointer; }
+    .card-btn:hover { background: #f4f4f4; }
+    .status-bar { padding: 10px 24px; background: #fff; border-top: 1px solid #ddd; font-size: 12px; color: #888; display: flex; gap: 12px; align-items: center; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #639922; display: inline-block; }
+    .empty { text-align: center; padding: 40px; color: #888; font-size: 14px; grid-column: 1/-1; }
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+  <div class="logo">Innovatech<span>Chile</span></div>
+  <div class="nav-links">
+    <span>Productos</span>
+    <span>Ofertas</span>
+    <span>Soporte</span>
+  </div>
+</div>
+
+<div class="hero">
+  <h1>Tecnología para todos</h1>
+  <p>PCs, notebooks, componentes y periféricos al mejor precio</p>
+  <div class="search-bar">
+    <input type="text" id="search-input" placeholder="Buscar productos..." oninput="filterProducts()">
+    <button>Buscar</button>
+  </div>
+</div>
+
+<div class="filters">
+  <span class="pill active" onclick="setFilter('todos', this)">Todos</span>
+  <span class="pill" onclick="setFilter('notebook', this)">Notebooks</span>
+  <span class="pill" onclick="setFilter('pc', this)">PCs</span>
+  <span class="pill" onclick="setFilter('componente', this)">Componentes</span>
+  <span class="pill" onclick="setFilter('periferico', this)">Periféricos</span>
+</div>
+
+<div class="grid" id="product-grid">
+  <div class="empty">Cargando productos...</div>
+</div>
+
+<div class="status-bar">
+  <span class="dot" id="status-dot"></span>
+  <span id="api-status">Conectando con backend...</span>
+  <span id="product-count"></span>
+</div>
+
+<script>
+  const BACKEND_URL = window.BACKEND_URL || 'http://localhost:3000';
+
+  let allProducts = [];
+  let filtroActivo = 'todos';
+  let busqueda = '';
+
+  const fallback = [
+    { id:1, nombre:"Notebook Gamer Pro 16", categoria:"notebook", precio:1299990, badge:"new", icon:"💻" },
+    { id:2, nombre:"PC Escritorio Core i7",  categoria:"pc",         precio:899990,  badge:"",    icon:"🖥️" },
+    { id:3, nombre:"Placa madre Z790",        categoria:"componente", precio:349990,  badge:"sale",icon:"🔧" },
+    { id:4, nombre:"RTX 4070 Ti 12GB",        categoria:"componente", precio:799990,  badge:"",    icon:"🎮" },
+    { id:5, nombre:"Monitor 27\" 4K IPS",     categoria:"periferico", precio:449990,  badge:"",    icon:"🖥️" },
+    { id:6, nombre:"Notebook Ultrabook 14",   categoria:"notebook",   precio:749990,  badge:"sale",icon:"💻" },
+    { id:7, nombre:"Teclado Mecánico RGB",    categoria:"periferico", precio:89990,   badge:"",    icon:"⌨️" },
+    { id:8, nombre:"RAM DDR5 32GB",           categoria:"componente", precio:129990,  badge:"new", icon:"💾" },
+  ];
+
+  function formatPrice(n) {
+    return '$' + Number(n).toLocaleString('es-CL');
+  }
+
+  function setFilter(cat, el) {
+    filtroActivo = cat;
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    renderGrid();
+  }
+
+  function filterProducts() {
+    busqueda = document.getElementById('search-input').value.toLowerCase();
+    renderGrid();
+  }
+
+  function renderGrid() {
+    const lista = allProducts.filter(p => {
+      const matchCat = filtroActivo === 'todos' || p.categoria === filtroActivo;
+      const matchBusq = p.nombre.toLowerCase().includes(busqueda);
+      return matchCat && matchBusq;
+    });
+
+    const grid = document.getElementById('product-grid');
+    if (lista.length === 0) {
+      grid.innerHTML = '<div class="empty">No se encontraron productos.</div>';
+      return;
+    }
+
+    grid.innerHTML = lista.map(p => `
+      <div class="card">
+        <div class="card-img">${p.icon || '📦'}</div>
+        ${p.badge === 'new'  ? '<span class="badge badge-new">Nuevo</span>'  : ''}
+        ${p.badge === 'sale' ? '<span class="badge badge-sale">Oferta</span>' : ''}
+        <div class="card-cat">${p.categoria.charAt(0).toUpperCase() + p.categoria.slice(1)}</div>
+        <div class="card-name">${p.nombre}</div>
+        <div class="card-price">${formatPrice(p.precio)}</div>
+        <button class="card-btn">Agregar al carro</button>
+      </div>
+    `).join('');
+
+    document.getElementById('product-count').textContent = lista.length + ' productos';
+  }
+
+  async function fetchProductos() {
+    const statusEl = document.getElementById('api-status');
+    const dot = document.getElementById('status-dot');
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/productos`);
+      if (!res.ok) throw new Error('Error HTTP');
+      const data = await res.json();
+      allProducts = data;
+      statusEl.textContent = 'Backend conectado — datos en tiempo real';
+      dot.style.background = '#639922';
+    } catch (e) {
+      allProducts = fallback;
+      statusEl.textContent = 'Backend no disponible — mostrando datos locales';
+      dot.style.background = '#E24B4A';
+    }
+    renderGrid();
+  }
+
+  fetchProductos();
+</script>
+</body>
+</html>
